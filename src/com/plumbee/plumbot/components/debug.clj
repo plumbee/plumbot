@@ -1,8 +1,7 @@
 (ns com.plumbee.plumbot.components.debug
   (:require [com.stuartsierra.component :as c]
             [com.plumbee.plumbot.support.logging :as log]
-            [com.plumbee.plumbot.components.webapi :refer [users-setPresence]]
-            [com.plumbee.plumbot.components.server :refer [overwrite-content append-content]])
+            [com.plumbee.plumbot.components.webapi :refer [users-setPresence]])
   (:import (java.net InetAddress)))
 
 
