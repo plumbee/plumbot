@@ -1,10 +1,19 @@
 # Plumbot
 
-A Clojure library host slack bots.
+A Clojure library to host slack bots.
 
 ## Usage
 
-TODO
+The Plumbot uses Stuart Sierra's [component library](https://github.com/stuartsierra/component).
+
+To begin, call `com.plumbee.plumbot.system/plumbot-system` to obtain a system map.
+Then call `com.stuartsierra.component/start` and `com.stuartsierra.component/stop` on this map to start and stop the system.
+
+Bots are records of type `com.plumbee.plumbot.register/Bot` and can be installed by calling
+ `com.plumbee.plumbot.register/register-bot!` on them.
+
+See the [example namespace](docs/example.clj) for a concrete example.
+
 
 ## License (See LICENSE file for full license)
 
