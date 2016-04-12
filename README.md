@@ -12,7 +12,7 @@ Then call `com.stuartsierra.component/start` and `com.stuartsierra.component/sto
 Bots are records of type `com.plumbee.plumbot.register/Bot` and can be installed by calling
  `com.plumbee.plumbot.register/register-bot!` on them.
 
-See the [example namespace](docs/example.clj) for a concrete example.
+See the [example namespace](doc/example.clj) for a concrete example.
 
 
 ## License (See LICENSE file for full license)
