@@ -9,4 +9,6 @@
                  [com.stuartsierra/component "0.3.1"]
                  [org.slf4j/slf4j-api "1.7.21"]
                  [org.eclipse.jetty.websocket/websocket-client "9.3.0.M2"]
-                 [ring/ring-codec "1.0.0"]])
+                 [ring/ring-codec "1.0.0"]]
+  :profiles {:dev {:resource-paths ["test-resources"]
+                   :jvm-opts ["-Dstate.path=test-resources/"]}})
