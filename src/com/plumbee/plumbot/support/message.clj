@@ -17,11 +17,6 @@
   ([] (rand-nth skin-tones))
   ([emoji] (str emoji (rand-nth skin-tones))))
 
-(defn pl [count singular plural]
-  (if (= count 1)
-    singular
-    plural))
-
 (defn de-link [str]
   (if-let [groups (re-find #"<.*\|(.*)>" str)]
     (nth groups 1)
