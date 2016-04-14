@@ -49,7 +49,7 @@
 
 
 ;TODO: if "ok": false then log/error
-(defn call
+(defn ^:dynamic call
   "Make an http call to slack."
   [{:keys [slack-api-url slack-api-token]} api-method-name params]
   (log/info "Calling: " api-method-name params slack-api-url slack-api-token)
