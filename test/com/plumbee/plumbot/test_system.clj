@@ -57,6 +57,26 @@
                       (atom nil)))
 
 
+(defn enqueue [channel value]
+  (a/>!! channel value))
+
+(defn dequeue
+  ([channel]
+   (let [[v c] (a/alts!! [channel (a/timeout 5000)])]
+     (if (= c channel) v "Timeout waiting for empty channel.")))
+  ([channel default]
+   (let [[v _] (a/alts!! [channel] :default default)]
+     v)))
+
+(def mock-bot-responses (a/chan 10))
+(register-bot! (->Bot (->Persona "MockBot" ":+1:")
+                      ["?"]
+                      (fn [state event]
+                        (if-let [response (dequeue mock-bot-responses nil)]
+                          (update-in state [:outbox] conj response)
+                          state))
+                      (atom nil)))
+
 (def api-call-input (a/chan 10))
 (def api-call-output (a/chan 10))
 
@@ -65,22 +85,11 @@
   (assert (= slack-api-token "Test Token"))
   (assert (= slack-api-url "http://test.url"))
 
-  (a/>!! api-call-input {:api-method-name api-method-name :params params})
+  (enqueue api-call-input {:api-method-name api-method-name :params params})
 
-  (let [[v c] (a/alts!! [api-call-output (a/timeout 5000)])]
-    (if (= c api-call-output)
-      v
-      (throw (TimeoutException. "Waited but no call response was available.")))))
-
-(defn enqueue-api-response [response]
-  (a/>!! api-call-output response))
-
-(defn dequeue-api-request []
-  (let [[v c] (a/alts!! [api-call-input (a/timeout 5000)])]
-    (if (= c api-call-input)
-      v
-      (throw (TimeoutException. "Waited but no call request was made.")))))
-
+  (if-let [response (dequeue api-call-output)]
+    response
+    (throw (TimeoutException. "Waited but no call response was available."))))
 
 (defn send-over-websocket [event]
   (doseq [listener @(:listeners mock-websocket)]
@@ -90,22 +99,39 @@
 (deftest System-Test
   (testing "integration of system"
     (binding [call mock-call]
+
       (send system-map c/start)
 
-      (enqueue-api-response {:ok true})
-      (is (= (:api-method-name (dequeue-api-request)) "users.setPresence"))
+      (enqueue api-call-output {:ok true})
+      (is (= (:api-method-name (dequeue api-call-input)) "users.setPresence"))
 
       (send-over-websocket {:type "message" :text "hello" :channel "CBeebies"})
-
-      (enqueue-api-response {:ok true})
-      (let [request (dequeue-api-request)]
+      (enqueue api-call-output {:ok true})
+      (let [request (dequeue api-call-input)]
         (is (= (:api-method-name request) "chat.postMessage"))
         (is (= (:channel (:params request)) "CBeebies"))
         (is (= (:text (:params request)) "Echo: hello")))
 
+      (enqueue mock-bot-responses {:channel-id "4" :type :message :text "Banana"})
+      (send-over-websocket {:type "message" :text "hello again!" :channel "CBeebies"})
+      (enqueue api-call-output {:ok true})
+      (enqueue api-call-output {:ok true})
+      (let [request1 (dequeue api-call-input)
+            request2 (dequeue api-call-input)
+            echo-request (first (filter #(= "EchoBot" (:username (:params %))) [request1 request2]))
+            mock-request (first (filter #(= "MockBot" (:username (:params %))) [request1 request2]))]
+        (println request1)
+        (println request2)
+        (is (= (:api-method-name echo-request) "chat.postMessage"))
+        (is (= (:channel (:params echo-request)) "CBeebies"))
+        (is (= (:text (:params echo-request)) "Echo: hello again!"))
+        (is (= (:api-method-name mock-request) "chat.postMessage"))
+        (is (= (:channel (:params mock-request)) "4"))
+        (is (= (:text (:params mock-request)) "Banana")))
+
       (send system-map c/stop)
 
-      (enqueue-api-response {:ok true})
-      (is (= (:api-method-name (dequeue-api-request)) "users.setPresence"))
+      (enqueue api-call-output{:ok true})
+      (is (= (:api-method-name (dequeue api-call-input)) "users.setPresence"))
 
       )))
