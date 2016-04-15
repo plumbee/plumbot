@@ -1,4 +1,4 @@
-(defproject com.plumbee/plumbot "0.0.2"
+(defproject com.plumbee/plumbot "0.0.3"
   :description "A Clojure library for hosting Slack bots."
   :url "http://plumbee.com"
   :license {:name "Apache License"
