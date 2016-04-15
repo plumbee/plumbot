@@ -85,6 +85,8 @@
   (assert (= slack-api-token "Test Token"))
   (assert (= slack-api-url "http://test.url"))
 
+  (println "mock-call: " api-method-name)
+
   (enqueue api-call-input {:api-method-name api-method-name :params params})
 
   (if-let [response (dequeue api-call-output)]
@@ -95,12 +97,20 @@
   (doseq [listener @(:listeners mock-websocket)]
     (listener event)))
 
+(defn wait-until-listener-added [limit]
+  (when (and (= 0 (count @(:listeners mock-websocket)))
+             (< 0 limit))
+    (println "Waiting for listener registration...   " limit)
+    (Thread/sleep 1000)
+    (recur (dec limit))))
+
 
 (deftest System-Test
   (testing "integration of system"
     (binding [call mock-call]
 
       (send system-map c/start)
+      (wait-until-listener-added 15)
 
       (enqueue api-call-output {:ok true})
       (is (= (:api-method-name (dequeue api-call-input)) "users.setPresence"))
