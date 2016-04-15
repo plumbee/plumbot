@@ -39,7 +39,7 @@
                                             :text       (apply str (interpose "\n" (@help-text-by-bot text)))}]}
         :else state))))
 
-(defrecord Persona [username icon-emoji])
+(defrecord Persona [username icon_emoji])
 (defrecord Bot [persona help-text handler state])
 
 (defn help-bot [& trigger-words]
